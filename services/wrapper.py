@@ -59,13 +59,6 @@ def getOrders(token: str, store: str, device: str):
 
 
 
-deviceId = "de787945-d1dd-4af5-b33c-5d98b6f6bb76"
-storeId = "86353278-e302-47a6-823d-99c89d6d0b78"
-tok = "IuOjJi6uAMkEzybWjogaKYvh2J0KwVxyN7h3M3rgwAY0vlyztgB1kWo6V51V01rFh0nuirqHjutO6STCalnwzc"
-
-mydev = getOrders(tok, storeId, deviceId)
-print(mydev)
-
 
 
 
