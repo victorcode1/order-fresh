@@ -1,9 +1,8 @@
 import requests
 from typing import TypedDict
 
-def getOrganization(token: str):
-    headers = {"x-integration-token": token}
-    payload = {}
+def getOrganization(token: str, headers: dict={}, payload: dict={}):
+    headers["x-integration-token"] = token
     url = "https://integrations-api.ftservices.cloud/integrators/kds-information"
     response = requests.request("GET", url=url, headers=headers, data=payload)
     if response.status_code == 200:
@@ -13,9 +12,8 @@ def getOrganization(token: str):
         return response.status_code
 
 
-def getStores(token: str):
-    headers = {"x-integration-token": token}
-    payload = {}
+def getStores(token: str, headers: dict={}, payload: dict={}):
+    headers["x-integration-token"] = token
     url = "https://integrations-api.ftservices.cloud/integrators/kds-information/locations"
     response = requests.request("GET", url=url, headers=headers, data=payload)
     if response.status_code == 200:
@@ -24,10 +22,8 @@ def getStores(token: str):
     else:
         return response.status_code
 
-def getDevices(token: str, store: str):
-    headers = {"x-integration-token": token}
-    
-    payload = {}
+def getDevices(token: str, store: str, headers: dict={}, payload: dict={}):
+    headers["x-integration-token"] = token
     
     url = f"https://integrations-api.ftservices.cloud/integrators/kds-information/locations/{store}/devices"
     
@@ -41,13 +37,11 @@ def getDevices(token: str, store: str):
 
 
 
-def getOrders(token: str, store: str, device: str):
-    headers = {
-        "x-integration-token": token,
-        "x-location-id": store,
-        "x-device-ids": device
-        }
-    payload = {}
+def getOrders(token: str, store: str, device: str, headers: dict={}, payload: dict={}):
+    headers["x-integration-token"] = token
+    headers["x-location-id"] = store
+    headers["x-device-ids"] = device
+
     url = "https://integrations-api.ftservices.cloud/integrators/kds-orders/active"
     
     response = requests.request("GET", url=url, headers=headers, data=payload)
@@ -105,17 +99,20 @@ vehicleColor: str = None,
 retry: str = None,
 costs: dict = None,
 
+#for requests
+headers: dict={}, 
+
 
 ):
 
     if id == None or name == None or time == None or mode == None or items == None or terminal == None:
         print("Could Not send order")
-
-    headers = {
-        "x-integration-token": token,
-        "x-location-id": store,
-        "x-device-ids": device
-        }
+        return "Could not send order"
+    
+    headers["x-integration-token"] = token
+    headers["x-location-id"] = store
+    headers["x-device-ids"] = device
+    
     url = "https://integrations-api.ftservices.cloud/integrators/kds-orders"
 
     payload = {
@@ -146,4 +143,6 @@ costs: dict = None,
 
     else:
         return response.status_code
+
+
 

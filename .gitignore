@@ -1,1 +1,6 @@
 /venv
+wrapper.egg-info
+build
+dist
+__pycache__
+.vscode
