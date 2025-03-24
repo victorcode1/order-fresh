@@ -1,5 +1,5 @@
 import requests
-from structs import Retry, Components, Mods, Item
+from pyKDSAPI.structs import Retry, Components, Mods, Item
 from datetime import datetime
 import json
 def getOrganization(token: str, headers: dict={}, payload: dict={}):
@@ -132,7 +132,6 @@ headers: dict={},
         "mode": mode,
         "items": items,
         "terminal": terminal,
-
         "phoneNumber": phoneNumber,
         "optInForSms": optInForSms,
         "deliveryAddress": deliveryAddress,
@@ -155,7 +154,8 @@ headers: dict={},
 
     # Sends POST request
     response = requests.request("POST", url=url, headers=headers, data=payload)
-    
+    #print(response)
+    print(response.json()  )
     # If status is ok return success in json
     if response.status_code == 200:
         return response.json()
