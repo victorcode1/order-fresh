@@ -5,9 +5,9 @@ from pyKDSAPI.utils import sendOrder
 from pyKDSAPI.structs import Item, Mods,Costs
 
 # Datos reales
-token = 'sTOHqSylJUmA68pT5lkvxuKLSxpmcAVfIQQ8ybL6UiymiFQXzZjQyRXzN38RKqHI8YZNFuMIiXBIyJJ1lHi7OT'
-location_id = '4f8e36ef-c1ec-4241-aa2a-e34b3324b8f9'
-device_id = 'ee1d1e13-f4b6-46ba-9992-b4807e413e23'
+token = 'DjYHZnUEAJZp1hCg0MhAG6Tz6cbpzYey6fMgyIhpcnRgdqdGtQvMkRWog4kXYWn6L3WoXCf5YkfNQxYpIvFZmT'
+location_id = '1d539473-6b19-4264-90d7-51223bb0d2e4'
+device_id = 'ce18c2da-2fc4-4ad4-ad07-26fe8287bb30'
 
 # Listas para generar valores aleatorios
 nombres_clientes = ['Luis', 'Ana', 'Carlos', 'María', 'Pedro', 'Lucía', 'Elena', 'Javier']

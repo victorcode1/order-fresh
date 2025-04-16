@@ -2,7 +2,7 @@ import requests
 
 # Pone acá tu token de integración completo
 headers = {
-    "x-integration-token": "sTOHqSylJUmA68pT5lkvxuKLSxpmcAVfIQQ8ybL6UiymiFQXzZjQyRXzN38RKqHI8YZNFuMIiXBIyJJ1lHi7OT"
+    "x-integration-token": "DjYHZnUEAJZp1hCg0MhAG6Tz6cbpzYey6fMgyIhpcnRgdqdGtQvMkRWog4kXYWn6L3WoXCf5YkfNQxYpIvFZmT"
 }
 
 # Endpoint para obtener ubicaciones asociadas al token
