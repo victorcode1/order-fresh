@@ -5,9 +5,9 @@ from pyKDSAPI.utils import SendMinimalOrder
 from pyKDSAPI.structs import Item, Mods
 
 # Datos REALES
-token = 'sTOHqSylJUmA68pT5lkvxuKLSxpmcAVfIQQ8ybL6UiymiFQXzZjQyRXzN38RKqHI8YZNFuMIiXBIyJJ1lHi7OT'
-location_id = '4f8e36ef-c1ec-4241-aa2a-e34b3324b8f9'
-device_id = 'ee1d1e13-f4b6-46ba-9992-b4807e413e23'
+token = '2cjIGIFIWNOd5qkt6yMg5wdoo546msuNZkepG1RJc8L2RVy6rWK1A2DmjdKxsmPjRSn1oBPoKCRW3HFrDQ7AVl'
+location_id = '9943ab9c-dcbe-4d93-b902-92cdeabf771d'
+device_id = 'b4d439c7-5c6a-421c-9365-f55b882dfc4a'
 
 # Listas para generar datos aleatorios
 nombres_clientes = ['Luis', 'Ana', 'Carlos', 'María', 'Pedro', 'Lucía', 'Elena', 'Javier']

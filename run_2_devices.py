@@ -1,10 +1,10 @@
 import requests
 
 headers = {
-    "x-integration-token": "DjYHZnUEAJZp1hCg0MhAG6Tz6cbpzYey6fMgyIhpcnRgdqdGtQvMkRWog4kXYWn6L3WoXCf5YkfNQxYpIvFZmT"
+    "x-integration-token": "BH5yuMvuuQOfOrUUDSdpsZr4INBf8STUI8dt1YjeiyUHag5SaVuVAB2YYqd2PovCDEpq4EvIHppHSjRSVPkggB"
 }
 
-location_id = "1d539473-6b19-4264-90d7-51223bb0d2e4"
+location_id = "687e1a74-03b4-4b6d-bdd9-3dc96193b813"
 
 resp = requests.get(f"https://integrations-api.ftservices.cloud/integrators/kds-information/locations/{location_id}/devices", headers=headers)
 
