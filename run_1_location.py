@@ -1,8 +1,9 @@
 import requests
+from env_config import get_integration_token
 
-# Pone acá tu token de integración completo
+# Carga el token desde variables de entorno o desde .env
 headers = {
-    "x-integration-token": "BH5yuMvuuQOfOrUUDSdpsZr4INBf8STUI8dt1YjeiyUHag5SaVuVAB2YYqd2PovCDEpq4EvIHppHSjRSVPkggB"
+    "x-integration-token": get_integration_token()
 }
 
 # Endpoint para obtener ubicaciones asociadas al token

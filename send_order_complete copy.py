@@ -1,11 +1,12 @@
 from datetime import datetime
 import random
 import uuid
+from env_config import get_integration_token
 from pyKDSAPI.utils import sendOrder
-from pyKDSAPI.structs import Item, Mods,Costs
+from pyKDSAPI.structs import Item, Mods, Costs
 
 # Datos reales
-token = 'BH5yuMvuuQOfOrUUDSdpsZr4INBf8STUI8dt1YjeiyUHag5SaVuVAB2YYqd2PovCDEpq4EvIHppHSjRSVPkggB'
+token = get_integration_token()
 location_id = '687e1a74-03b4-4b6d-bdd9-3dc96193b813'
 device_id = '14d5cdca-05de-4715-bbe1-4f52444dcc0e'
 
@@ -48,8 +49,8 @@ response = sendOrder(
     phoneNumber=f"+569{random.randint(10000000, 99999999)}",
     optInForSms=random.choice([True, False]),
     deliveryAddress=random.choice(["Av. Falsa 123", "Calle Real 456", "Ruta 789"]),
- server=random.choice(["Mozo 1", "Camarera 2", "AutoServicio"]),
-# source=random.choice(["POS-System", "API-Integration", "WebOrder"]),
+    server=random.choice(["Mozo 1", "Camarera 2", "AutoServicio"]),
+    # source=random.choice(["POS-System", "API-Integration", "WebOrder"]),
     pickupTime=datetime.now().isoformat(),
     specialInstructions=random.choice(["Agregar cubiertos", "Mesa con silla alta", "Sin cubiertos", ""]),
     customerArrivedUrl="https://example.com/arrived",

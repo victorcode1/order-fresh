@@ -1,7 +1,8 @@
 import requests
+from env_config import get_integration_token
 
 headers = {
-    "x-integration-token": "BH5yuMvuuQOfOrUUDSdpsZr4INBf8STUI8dt1YjeiyUHag5SaVuVAB2YYqd2PovCDEpq4EvIHppHSjRSVPkggB"
+    "x-integration-token": get_integration_token()
 }
 
 location_id = "687e1a74-03b4-4b6d-bdd9-3dc96193b813"

@@ -1,11 +1,12 @@
 from datetime import datetime
 import random
 import uuid
+from env_config import get_integration_token
 from pyKDSAPI.utils import sendOrder
 from pyKDSAPI.structs import Item, Mods, Costs
 
 # Datos reales
-token = 'BH5yuMvuuQOfOrUUDSdpsZr4INBf8STUI8dt1YjeiyUHag5SaVuVAB2YYqd2PovCDEpq4EvIHppHSjRSVPkggB'
+token = get_integration_token()
 location_id = '687e1a74-03b4-4b6d-bdd9-3dc96193b813'
 device_id = '14d5cdca-05de-4715-bbe1-4f52444dcc0e'
 
