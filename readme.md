@@ -222,3 +222,7 @@ Guías encontradas de Fresh KDS:
 - El proyecto silencia el warning de `urllib3` relacionado con LibreSSL para que no ensucie la salida.
 - `.env` está ignorado por Git para no subir secretos.
 - El wrapper local en `pyKDSAPI` implementa las rutas cloud principales y helpers para TCP/UDP local.
+
+https://www.fresh.technology/kds/developer-guide
+
+https://fresh-technology.github.io/fresh.kds.docs.mobile-local-network-integration/docs/api/locations_screens/
