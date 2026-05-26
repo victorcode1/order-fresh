@@ -1,103 +1,12 @@
-from datetime import datetime
-import random
-import uuid
-from env_config import get_integration_token
-from pyKDSAPI.utils import sendOrder
-from pyKDSAPI.structs import Item, Mods, Costs
+import runtime_warnings
 
-# Datos reales
-token = get_integration_token()
-location_id = '687e1a74-03b4-4b6d-bdd9-3dc96193b813'
-device_id = '14d5cdca-05de-4715-bbe1-4f52444dcc0e'
+from env_config import get_device_id, get_integration_token, get_location_id
+from order_templates import print_order_summary, run_complete_order
 
-# Listas para generar valores aleatorios
-nombres_clientes = ['Luis', 'Ana', 'Carlos', 'María', 'Pedro', 'Lucía', 'Elena', 'Javier']
-productos = ['Hamburguesa Clásica', 'Pizza Margarita', 'Ensalada César', 'Sándwich de Pollo', 'Wrap Vegetariano']
-modificadores = ['Sin cebolla', 'Extra queso', 'Sin tomate', 'Pan sin gluten', 'Sin mayonesa']
 
-# Generar ítems aleatorios
-def generar_item():
-    producto = random.choice(productos)
-    mod = random.choice(modificadores)
-    return Item(
-        id=str(uuid.uuid4()),
-        name=producto,
-        qty=random.randint(1, 3),
-        mods=[Mods(id=str(uuid.uuid4()), name=mod, components=[])],
-        lineId=str(uuid.uuid4()),
-        price=str(round(random.uniform(5.00, 20.00), 2)),
-        components=[],
-        specialInstructions=random.choice(["", "Sin condimentos", "Cocido bien", mod])
-    )
-
-# Datos del pedido
-order_id = f'orden-{uuid.uuid4().hex[:6]}'
-cliente = random.choice(nombres_clientes)
-items = [generar_item() for _ in range(random.randint(1, 3))]
-
-# Calcular costs de manera más consistente
-subtotal = round(random.uniform(15.0, 30.0), 2)
-tax = round(subtotal * 0.08, 2)  # 8% de impuesto
-total = subtotal + tax
-
-# Crear objeto costs usando la clase Costs
-costs_obj = Costs(
-    subtotal=f"{subtotal:.2f}",
-    tax=f"{tax:.2f}",
-    deliveryFee="0.00",
-    surcharge="0.00",
-    convenienceFee="0.00",
-    tip="0.00",
-    additionalFees=[],
-    total=f"{total:.2f}",
-    promoCodes=[]
+result = run_complete_order(
+    token=get_integration_token(),
+    location_id=get_location_id(),
+    device_id=get_device_id(),
 )
-
-# Enviar orden usando todos los campos
-response = sendOrder(
-    token=token,
-    store=location_id,
-    device=device_id,
-    id=order_id,
-    name=f"{cliente} Cliente",
-    mode=random.choice(["For Here", "ToGo", "Pickup", "DriveThru", "Delivery", "CurbSide"]),
-    items=items,
-    terminal=random.choice(["Caja 1", "Terminal 2", "POS 3"]),
-    time=datetime.now().isoformat(),
-    phoneNumber=f"+569{random.randint(10000000, 99999999)}",
-    optInForSms=random.choice([True, False]),
-    deliveryAddress=random.choice(["Av. Falsa 123", "Calle Real 456", "Ruta 789"]),
-    server=random.choice(["Mozo 1", "Camarera 2", "AutoServicio"]),
-    # source=random.choice(["POS-System", "API-Integration", "WebOrder"]),
-    pickupTime=datetime.now().isoformat(),
-    specialInstructions=random.choice(["Agregar cubiertos", "Mesa con silla alta", "Sin cubiertos", ""]),
-    customerArrivedUrl="https://example.com/arrived",
-    vehicleModel=random.choice(["Toyota", "Ford", "Hyundai", ""]),
-    vehicleColor=random.choice(["Rojo", "Negro", "Blanco", "Azul"]),
-    retry={
-        "notificationUrl": "https://example.com/notify",
-        "expiration": datetime.now().isoformat()
-    },
-    costs=costs_obj,
-    deliveryservice={
-        "name": random.choice(["UberEats", "Rappi", "PedidosYa"]),
-        "orderId": f"TRK{random.randint(1000, 9999)}XYZ",
-        "driverPhone": f"+569{random.randint(10000000, 99999999)}"
-    },
-    # accessibility={
-    #     "wheelChairAccess": random.choice([True, False])
-    # },
-    originSource=random.choice(["ThirdPartyVendor", "MobileApp", "WebKiosk"])
-)
-
-# Mostrar resultado
-print(f"🧾 Orden enviada: {order_id}")
-print(f"👤 Cliente: {cliente}")
-print(f"📦 Total ítems: {len(items)}")
-for i in items:
-    mods = i.get('mods', [])
-    mod_name = mods[0].get('name', 'Sin modificador') if mods else 'Sin modificador'
-    print(f" - {i['qty']} x {i['name']} [{mod_name}]")
-
-print("📡 Respuesta del servidor:")
-print(response)
+print_order_summary(result)
