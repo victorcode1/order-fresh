@@ -99,22 +99,23 @@ Opciones disponibles hoy en `main.py`:
 9. Enviar orden: mesa con cursos, asientos y covers
 10. Enviar orden: orden con costos, fees y promoCodes
 11. Enviar orden: orden enviada a todas las pantallas
-12. Health check API
-13. Ver informacion completa de la marca
-14. Ver locations
-15. Ver devices de la location
-16. Ver ordenes activas
-17. Enviar mensaje a pantalla KDS
-18. Cancelar orden
-19. Actualizar orden parcial
-20. Actualizar orden completa
-21. Notificar que el cliente llego
-22. Actualizar ETA del cliente
-23. Descubrir pantallas en red local
-24. Enviar orden local por TCP
-25. Actualizar orden local completa
-26. Actualizar orden local parcial
-27. Cancelar orden local
+12. Enviar orden: 2 ordenes con el mismo nombre
+13. Health check API
+14. Ver informacion completa de la marca
+15. Ver locations
+16. Ver devices de la location
+17. Ver ordenes activas
+18. Enviar mensaje a pantalla KDS
+19. Cancelar orden
+20. Actualizar orden parcial
+21. Actualizar orden completa
+22. Notificar que el cliente llego
+23. Actualizar ETA del cliente
+24. Descubrir pantallas en red local
+25. Enviar orden local por TCP
+26. Actualizar orden local completa
+27. Actualizar orden local parcial
+28. Cancelar orden local
 0. Salir
 
 ## Scripts disponibles

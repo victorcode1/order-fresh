@@ -133,7 +133,10 @@
     <section class="card">
       <h2>Acciones sobre una orden</h2>
       <div class="row">
-        <div class="field" style="flex:2"><span>Order ID</span><input id="orderId" placeholder="orden-abc123" /></div>
+        <div class="field" style="flex:3"><span>Order ID (órdenes activas)</span>
+          <select id="orderId"><option value="">(carga las órdenes)</option></select>
+        </div>
+        <button class="ghost" id="loadOrdersBtn">Cargar órdenes</button>
       </div>
       <div class="row">
         <div class="field"><span>Nuevo nombre (parcial / completa)</span><input id="orderName" placeholder="Cliente actualizado" /></div>
@@ -172,8 +175,12 @@
         <button class="ghost" id="discoverBtn">Descubrir pantallas</button>
       </div>
       <div class="row">
-        <div class="field"><span>IP pantalla</span><input id="localIp" placeholder="192.168.1.50" /></div>
-        <div class="field"><span>Order ID (update/cancel)</span><input id="localOrderId" placeholder="orden-abc123" /></div>
+        <div class="field"><span>IP pantalla (descubiertas)</span>
+          <select id="localIp"><option value="">(descubre pantallas)</option></select>
+        </div>
+        <div class="field"><span>Order ID (órdenes activas)</span>
+          <select id="localOrderId"><option value="">(carga las órdenes)</option></select>
+        </div>
       </div>
       <div class="btn-grid">
         <button id="localSendBtn">Enviar orden</button>
@@ -236,13 +243,14 @@
       if (!data) return;
       const tmpl = $("templateSel");
       tmpl.innerHTML = "";
-      data.templates.forEach((t) => {
+      data.templates.forEach((t, i) => {
         const o = document.createElement("option");
-        o.value = t.key; o.textContent = `${t.key}. ${t.label}`;
+        o.value = t.key; o.textContent = `${i + 1}. ${t.label}`;
         tmpl.appendChild(o);
       });
       await loadLocations(data.locationId, data.deviceId);
-      checkHealth();
+      await checkHealth();
+      loadOrders();
     }
 
     async function loadLocations(preLoc, preDev) {
@@ -280,6 +288,33 @@
       }
     }
 
+    function fillSelect(id, values, emptyText) {
+      const sel = $(id);
+      const current = sel.value;
+      sel.innerHTML = "";
+      if (!values.length) {
+        sel.innerHTML = `<option value="">${emptyText}</option>`;
+        return;
+      }
+      values.forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v.value; o.textContent = v.text;
+        sel.appendChild(o);
+      });
+      if (values.some((v) => v.value === current)) sel.value = current;
+    }
+
+    async function loadOrders() {
+      const data = await call("Cargar órdenes activas", "/api/orders", { query: ctx() });
+      const ids = [];
+      if (Array.isArray(data)) {
+        data.forEach((d) => (d.orders || []).forEach((o) => o.orderId && ids.push(o.orderId)));
+      }
+      const opts = [...new Set(ids)].map((id) => ({ value: id, text: id }));
+      fillSelect("orderId", opts, "(sin órdenes activas)");
+      fillSelect("localOrderId", opts, "(sin órdenes activas)");
+    }
+
     async function checkHealth() {
       const dot = $("statusDot"), txt = $("statusText");
       try {
@@ -315,10 +350,12 @@
     $("getOrdersBtn").addEventListener("click", () =>
       call("Órdenes activas", "/api/orders", { query: ctx() })
     );
+    $("loadOrdersBtn").addEventListener("click", loadOrders);
 
-    $("sendTemplateBtn").addEventListener("click", () =>
-      call("Enviar orden", "/api/send-order", { method: "POST", body: { template: $("templateSel").value, ...ctx() } })
-    );
+    $("sendTemplateBtn").addEventListener("click", async () => {
+      await call("Enviar orden", "/api/send-order", { method: "POST", body: { template: $("templateSel").value, ...ctx() } });
+      loadOrders();
+    });
 
     $("msgBtn").addEventListener("click", () =>
       call("Mensaje KDS", "/api/message", { method: "POST", body: { message: $("kdsMsg").value, ...ctx() } })
@@ -329,9 +366,10 @@
       return v === "" ? undefined : v === "true";
     }
 
-    $("cancelBtn").addEventListener("click", () =>
-      call("Cancelar orden", "/api/cancel", { method: "POST", body: { orderId: $("orderId").value, ...ctx() } })
-    );
+    $("cancelBtn").addEventListener("click", async () => {
+      await call("Cancelar orden", "/api/cancel", { method: "POST", body: { orderId: $("orderId").value, ...ctx() } });
+      loadOrders();
+    });
     $("partialBtn").addEventListener("click", () =>
       call("Update parcial", "/api/partial-update", {
         method: "POST",
@@ -353,9 +391,16 @@
     );
 
     // ---- local ----
-    $("discoverBtn").addEventListener("click", () =>
-      call("Discovery local", "/api/local/discover", { query: { timeout: $("discTimeout").value } })
-    );
+    $("discoverBtn").addEventListener("click", async () => {
+      const data = await call("Discovery local", "/api/local/discover", { query: { timeout: $("discTimeout").value } });
+      const opts = Array.isArray(data)
+        ? data.filter((d) => d.ipAddress).map((d) => ({
+            value: d.ipAddress,
+            text: `${d.name || d.identifier || "pantalla"} (${d.ipAddress})`,
+          }))
+        : [];
+      fillSelect("localIp", opts, "(no se encontraron pantallas)");
+    });
     $("localSendBtn").addEventListener("click", () =>
       call("Orden local", "/api/local/send", { method: "POST", body: { ip: $("localIp").value } })
     );

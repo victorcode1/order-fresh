@@ -524,6 +524,60 @@ def run_all_devices_order(token: str, location_id: str, device_id: str) -> dict:
     return _base_result(order_id, customer, items, response)
 
 
+def run_two_same_name_orders(token: str, location_id: str, device_id: str) -> dict:
+    """Envia 2 ordenes distintas pero con el mismo nombre de cliente."""
+    customer = _random_customer()
+    order_name = f"{customer} Cliente"
+    productos = [
+        "Hamburguesa Clasica",
+        "Pizza Margarita",
+        "Ensalada Cesar",
+        "Sandwich de Pollo",
+        "Wrap Vegetariano",
+        "Tacos al Pastor",
+    ]
+    modificadores = ["Sin cebolla", "Extra queso", "Sin tomate", "Sin mayonesa", "Salsa picante"]
+
+    all_items: list[Item] = []
+    order_ids: list[str] = []
+    responses: list = []
+
+    for _ in range(2):
+        order_id = _new_order_id("orden")
+        items = [
+            _item(
+                random.choice(productos),
+                qty=random.randint(1, 3),
+                mod_name=random.choice(modificadores),
+                price=str(round(random.uniform(5.00, 15.00), 2)),
+            )
+            for _ in range(random.randint(1, 2))
+        ]
+
+        response = SendMinimalOrder(
+            token=token,
+            store=location_id,
+            device=device_id,
+            id=order_id,
+            name=order_name,
+            mode="For Here",
+            items=items,
+            terminal="Caja 1",
+            time=datetime.now().isoformat(),
+        )
+
+        order_ids.append(order_id)
+        all_items.extend(items)
+        responses.append(response)
+
+    return {
+        "order_id": ", ".join(order_ids),
+        "customer": order_name,
+        "items": all_items,
+        "response": responses,
+    }
+
+
 ORDER_OPTIONS = {
     "1": ("send_order_complete copy.py", run_complete_copy_order),
     "2": ("send_order_complete.py", run_complete_order),
@@ -536,4 +590,5 @@ ORDER_OPTIONS = {
     "9": ("mesa con cursos, asientos y covers", run_dine_in_courses_order),
     "10": ("orden con costos, fees y promoCodes", run_costs_promos_order),
     "11": ("orden enviada a todas las pantallas", run_all_devices_order),
+    "28": ("2 ordenes con el mismo nombre", run_two_same_name_orders),
 }

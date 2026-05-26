@@ -153,27 +153,46 @@ def _resolve_location_and_device(token: str) -> tuple[dict, dict]:
     return selected_store, selected_device
 
 
-def _show_menu() -> None:
-    print("\nQue quieres ejecutar?")
-    for key, (label, _) in ORDER_OPTIONS.items():
-        print(f"{key}. Enviar orden: {label}")
+# Etiquetas de las acciones cloud/local. La clave es el id interno que esperan
+# _run_cloud_option / _run_local_option (no cambia el enrutado).
+ACTION_LABELS = {
+    "12": "Health check API",
+    "13": "Ver informacion completa de la marca",
+    "14": "Ver locations",
+    "15": "Ver devices de la location",
+    "16": "Ver ordenes activas",
+    "17": "Enviar mensaje a pantalla KDS",
+    "18": "Cancelar orden",
+    "19": "Actualizar orden parcial",
+    "20": "Actualizar orden completa",
+    "21": "Notificar que el cliente llego",
+    "22": "Actualizar ETA del cliente",
+    "23": "Descubrir pantallas en red local",
+    "24": "Enviar orden local por TCP",
+    "25": "Actualizar orden local completa",
+    "26": "Actualizar orden local parcial",
+    "27": "Cancelar orden local",
+}
 
-    print("12. Health check API")
-    print("13. Ver informacion completa de la marca")
-    print("14. Ver locations")
-    print("15. Ver devices de la location")
-    print("16. Ver ordenes activas")
-    print("17. Enviar mensaje a pantalla KDS")
-    print("18. Cancelar orden")
-    print("19. Actualizar orden parcial")
-    print("20. Actualizar orden completa")
-    print("21. Notificar que el cliente llego")
-    print("22. Actualizar ETA del cliente")
-    print("23. Descubrir pantallas en red local")
-    print("24. Enviar orden local por TCP")
-    print("25. Actualizar orden local completa")
-    print("26. Actualizar orden local parcial")
-    print("27. Cancelar orden local")
+
+def _build_menu() -> list[tuple[str, str]]:
+    """Devuelve [(numero_mostrado, id_interno)] con numeracion correlativa.
+
+    El numero que ve el usuario es secuencial (1..N); el id interno conserva
+    las claves de ORDER_OPTIONS y los numeros 12-27 que usa el enrutado.
+    """
+    action_ids = list(ORDER_OPTIONS) + [str(value) for value in range(12, 28)]
+    return [(str(display), action_id) for display, action_id in enumerate(action_ids, start=1)]
+
+
+def _show_menu(menu: list[tuple[str, str]]) -> None:
+    print("\nQue quieres ejecutar?")
+    for display_num, action_id in menu:
+        if action_id in ORDER_OPTIONS:
+            label = f"Enviar orden: {ORDER_OPTIONS[action_id][0]}"
+        else:
+            label = ACTION_LABELS[action_id]
+        print(f"{display_num}. {label}")
     print("0. Salir")
 
 
@@ -275,21 +294,27 @@ def main() -> int:
         location_id = selected_store["id"]
         device_id = selected_device["id"]
 
+        menu = _build_menu()
+        display_to_action = {display_num: action_id for display_num, action_id in menu}
+
         while True:
-            _show_menu()
+            _show_menu(menu)
             selected = input("Selecciona un numero: ").strip()
 
             if selected == "0":
                 return 0
-            if selected in ORDER_OPTIONS:
-                _run_send_order_option(selected, token, location_id, device_id)
-            elif selected in {str(value) for value in range(12, 23)}:
-                _run_cloud_option(selected, token, location_id, device_id)
-            elif selected in {str(value) for value in range(23, 28)}:
-                _run_local_option(selected)
-            else:
+
+            action_id = display_to_action.get(selected)
+            if action_id is None:
                 print("Seleccion invalida. Intenta de nuevo.")
                 continue
+
+            if action_id in ORDER_OPTIONS:
+                _run_send_order_option(action_id, token, location_id, device_id)
+            elif action_id in {str(value) for value in range(12, 23)}:
+                _run_cloud_option(action_id, token, location_id, device_id)
+            elif action_id in {str(value) for value in range(23, 28)}:
+                _run_local_option(action_id)
 
             time.sleep(0.2)
     except Exception as error:
