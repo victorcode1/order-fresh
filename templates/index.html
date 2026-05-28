@@ -76,7 +76,9 @@
     .log { margin-bottom: 12px; border-left: 3px solid var(--border); padding-left: 10px; }
     .log.ok { border-color: var(--ok); }
     .log.err { border-color: var(--danger); }
-    .log .meta { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+    .log .meta { color: var(--muted); font-size: 11px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .copy-btn { background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 2px 8px; font-size: 10.5px; font-weight: 600; cursor: pointer; flex: 0 0 auto; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--text); background: #28333f; }
     .log pre { margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--text); }
     .log.err pre { color: #ffb3bc; }
     .hint { font-size: 11.5px; color: var(--muted); margin: -4px 0 10px; }
@@ -104,6 +106,22 @@
   </header>
 
   <main>
+    <!-- API Key -->
+    <section class="card" id="tokenCard">
+      <h2>API Key (X-Integration-Token)</h2>
+      <p class="hint" id="tokenStatus">Verificando token…</p>
+      <div class="row">
+        <div class="field" style="flex:3">
+          <span>Token de Fresh KDS</span>
+          <input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false"
+                 placeholder="Pega aquí tu token y haz click en Guardar" />
+        </div>
+        <button class="ghost" id="toggleTokenBtn" type="button" title="Mostrar / ocultar">Ver</button>
+        <button id="saveTokenBtn" type="button">Guardar</button>
+      </div>
+      <p class="hint">Se guarda en <code>.env</code> como <code>X_INTEGRATION_TOKEN</code>. Nunca se muestra el valor completo después de guardarlo.</p>
+    </section>
+
     <!-- Enviar ordenes -->
     <section class="card">
       <h2>Enviar orden (plantilla)</h2>
@@ -206,13 +224,52 @@
     const $ = (id) => document.getElementById(id);
     const consoleEl = $("console");
 
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // Fallback para navegadores sin clipboard API (http, etc.)
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try { ok = document.execCommand("copy"); } catch { ok = false; }
+        ta.remove();
+        return ok;
+      }
+    }
+
     function log(title, payload, ok = true) {
       const div = document.createElement("div");
       div.className = "log " + (ok ? "ok" : "err");
       const time = new Date().toLocaleTimeString();
       const body = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
-      div.innerHTML = `<div class="meta">${time} · ${title}</div><pre></pre>`;
-      div.querySelector("pre").textContent = body;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const metaText = document.createElement("span");
+      metaText.textContent = `${time} · ${title}`;
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "copy-btn";
+      copyBtn.textContent = "Copiar";
+      copyBtn.addEventListener("click", async () => {
+        const done = await copyText(body);
+        copyBtn.textContent = done ? "Copiado ✓" : "Error";
+        setTimeout(() => (copyBtn.textContent = "Copiar"), 1500);
+      });
+      meta.appendChild(metaText);
+      meta.appendChild(copyBtn);
+
+      const pre = document.createElement("pre");
+      pre.textContent = body;
+
+      div.appendChild(meta);
+      div.appendChild(pre);
       consoleEl.prepend(div);
     }
 
@@ -238,9 +295,21 @@
     }
 
     // ---- bootstrap config ----
+    function renderTokenStatus(data) {
+      const statusEl = $("tokenStatus");
+      if (data.hasToken) {
+        statusEl.textContent = `Token configurado (${data.tokenPreview}). Sobrescribe el valor y guarda para reemplazarlo.`;
+        statusEl.style.color = "var(--ok)";
+      } else {
+        statusEl.textContent = "No hay token configurado. Pega tu API Key y guárdala para empezar.";
+        statusEl.style.color = "var(--danger)";
+      }
+    }
+
     async function loadConfig() {
       const data = await call("Config", "/api/config");
       if (!data) return;
+      renderTokenStatus(data);
       const tmpl = $("templateSel");
       tmpl.innerHTML = "";
       data.templates.forEach((t, i) => {
@@ -248,22 +317,29 @@
         o.value = t.key; o.textContent = `${i + 1}. ${t.label}`;
         tmpl.appendChild(o);
       });
-      await loadLocations(data.locationId, data.deviceId);
-      await checkHealth();
-      loadOrders();
+      if (data.hasToken) {
+        await loadLocations(data.locationId, data.deviceId);
+        await checkHealth();
+        loadOrders();
+      } else {
+        $("statusDot").className = "dot off";
+        $("statusText").textContent = "Falta token";
+      }
     }
 
     async function loadLocations(preLoc, preDev) {
       const locs = await call("Locations", "/api/locations");
       const sel = $("locationSel");
       sel.innerHTML = "";
-      if (Array.isArray(locs)) {
+      if (Array.isArray(locs) && locs.length) {
         locs.forEach((l) => {
           const o = document.createElement("option");
           o.value = l.id; o.textContent = `${l.name} (${l.id})`;
           sel.appendChild(o);
         });
-        if (preLoc) sel.value = preLoc;
+        // Usa el preseleccionado si pertenece al token; si no, cae al primero.
+        const valid = locs.some((l) => l.id === preLoc);
+        sel.value = valid ? preLoc : locs[0].id;
       }
       await loadDevices(preDev);
     }
@@ -284,7 +360,9 @@
         const all = document.createElement("option");
         all.value = "all"; all.textContent = "all (todas las pantallas)";
         sel.appendChild(all);
-        if (preDev) sel.value = preDev;
+        // Usa el device preseleccionado si es válido; si no, el primero disponible.
+        const valid = devs.some((d) => d.id === preDev);
+        sel.value = valid ? preDev : (devs.length ? devs[0].id : "all");
       }
     }
 
@@ -339,6 +417,35 @@
         body: { FRESH_KDS_LOCATION_ID: $("locationSel").value, FRESH_KDS_DEVICE_ID: $("deviceSel").value },
       })
     );
+
+    $("toggleTokenBtn").addEventListener("click", () => {
+      const input = $("apiKeyInput");
+      const btn = $("toggleTokenBtn");
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      btn.textContent = showing ? "Ver" : "Ocultar";
+    });
+
+    $("saveTokenBtn").addEventListener("click", async () => {
+      const input = $("apiKeyInput");
+      const token = input.value.trim();
+      if (!token) {
+        log("Guardar token — ERROR", "El token está vacío", false);
+        return;
+      }
+      const result = await call("Guardar token", "/api/config", {
+        method: "POST",
+        body: { X_INTEGRATION_TOKEN: token },
+      });
+      if (result) {
+        input.value = "";
+        input.type = "password";
+        $("toggleTokenBtn").textContent = "Ver";
+        // Recarga todo: con el nuevo token se cargan locations y devices y se
+        // autoselecciona el primero de cada lista.
+        await loadConfig();
+      }
+    });
 
     document.querySelectorAll("[data-get]").forEach((b) =>
       b.addEventListener("click", () => call(b.textContent, b.dataset.get))

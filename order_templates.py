@@ -104,19 +104,23 @@ def run_complete_order(token: str, location_id: str, device_id: str) -> dict:
         promoCodes=[],
     )
 
+    # Nota: el modo se eligio dentro del subset compatible con el resto del
+    # payload (sin deliveryService). Para escenarios delivery usar la opcion 5.
+    mode = random.choice(["For Here", "ToGo", "Pickup", "DriveThru", "Curbside"])
+    expiration = (datetime.now() + timedelta(minutes=30)).isoformat()
+
     response = sendOrder(
         token=token,
         store=location_id,
         device=device_id,
         id=order_id,
         name=f"{cliente} Cliente",
-        mode=random.choice(["For Here", "ToGo", "Pickup", "DriveThru", "Delivery", "Curbside"]),
+        mode=mode,
         items=items,
         terminal=random.choice(["Caja 1", "Terminal 2", "POS 3"]),
         time=datetime.now().isoformat(),
         phoneNumber=f"+569{random.randint(10000000, 99999999)}",
         optInForSms=random.choice([True, False]),
-        deliveryAddress=random.choice(["Av. Falsa 123", "Calle Real 456", "Ruta 789"]),
         server=random.choice(["Mozo 1", "Camarera 2", "AutoServicio"]),
         pickupTime=datetime.now().isoformat(),
         specialInstructions=random.choice(["Agregar cubiertos", "Mesa con silla alta", "Sin cubiertos", ""]),
@@ -125,14 +129,9 @@ def run_complete_order(token: str, location_id: str, device_id: str) -> dict:
         vehicleColor=random.choice(["Rojo", "Negro", "Blanco", "Azul"]),
         retry={
             "notificationUrl": "https://example.com/notify",
-            "expiration": datetime.now().isoformat(),
+            "expiration": expiration,
         },
         costs=costs_obj,
-        deliveryservice={
-            "name": random.choice(["UberEats", "Rappi", "PedidosYa"]),
-            "orderId": f"TRK{random.randint(1000, 9999)}XYZ",
-            "driverPhone": f"+569{random.randint(10000000, 99999999)}",
-        },
         originSource=random.choice(["ThirdPartyVendor", "MobileApp", "WebKiosk"]),
     )
 
@@ -167,19 +166,21 @@ def run_complete_copy_order(token: str, location_id: str, device_id: str) -> dic
     cliente = random.choice(nombres_clientes)
     items = [generar_item() for _ in range(random.randint(1, 3))]
 
+    mode = random.choice(["For Here", "ToGo", "Pickup", "DriveThru", "Curbside"])
+    expiration = (datetime.now() + timedelta(minutes=30)).isoformat()
+
     response = sendOrder(
         token=token,
         store=location_id,
         device=device_id,
         id=order_id,
         name=f"{cliente} Cliente",
-        mode=random.choice(["For Here", "ToGo", "Pickup", "DriveThru", "Delivery", "Curbside"]),
+        mode=mode,
         items=items,
         terminal=random.choice(["Caja 1", "Terminal 2", "POS 3"]),
         time=datetime.now().isoformat(),
         phoneNumber=f"+569{random.randint(10000000, 99999999)}",
         optInForSms=random.choice([True, False]),
-        deliveryAddress=random.choice(["Av. Falsa 123", "Calle Real 456", "Ruta 789"]),
         server=random.choice(["Mozo 1", "Camarera 2", "AutoServicio"]),
         pickupTime=datetime.now().isoformat(),
         specialInstructions=random.choice(["Agregar cubiertos", "Mesa con silla alta", "Sin cubiertos", ""]),
@@ -188,7 +189,7 @@ def run_complete_copy_order(token: str, location_id: str, device_id: str) -> dic
         vehicleColor=random.choice(["Rojo", "Negro", "Blanco", "Azul"]),
         retry={
             "notificationUrl": "https://example.com/notify",
-            "expiration": datetime.now().isoformat(),
+            "expiration": expiration,
         },
         costs={
             "subtotal": str(round(random.uniform(15.0, 30.0), 2)),
@@ -200,11 +201,6 @@ def run_complete_copy_order(token: str, location_id: str, device_id: str) -> dic
             "additionalFees": [],
             "total": str(round(random.uniform(20.0, 40.0), 2)),
             "promoCodes": [],
-        },
-        deliveryservice={
-            "name": random.choice(["UberEats", "Rappi", "PedidosYa"]),
-            "orderId": f"TRK{random.randint(1000, 9999)}XYZ",
-            "driverPhone": f"+569{random.randint(10000000, 99999999)}",
         },
         originSource=random.choice(["ThirdPartyVendor", "MobileApp", "WebKiosk"]),
     )

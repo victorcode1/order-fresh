@@ -128,12 +128,21 @@ def index():
 # ---------------------------------------------------------------------------
 # Configuracion / conexion
 # ---------------------------------------------------------------------------
+def _mask_token(token: str | None) -> str | None:
+    if not token:
+        return None
+    if len(token) <= 8:
+        return "…" + token[-2:]
+    return f"{token[:4]}…{token[-4:]}"
+
+
 @app.get("/api/config")
 def api_config():
-    has_token = _env_default(_token) is not None
+    token = _env_default(_token)
     return _ok(
         {
-            "hasToken": has_token,
+            "hasToken": token is not None,
+            "tokenPreview": _mask_token(token),
             "locationId": _env_default(get_location_id),
             "deviceId": _env_default(get_device_id),
             "templates": [
@@ -146,15 +155,26 @@ def api_config():
 @app.post("/api/config")
 def api_save_config():
     body = _body()
+    allowed_keys = (
+        "FRESH_KDS_LOCATION_ID",
+        "FRESH_KDS_DEVICE_ID",
+        "X_INTEGRATION_TOKEN",
+        "FRESH_KDS_API_KEY",
+    )
     values = {
         key: str(body[key]).strip()
-        for key in ("FRESH_KDS_LOCATION_ID", "FRESH_KDS_DEVICE_ID")
-        if body.get(key)
+        for key in allowed_keys
+        if body.get(key) is not None and str(body[key]).strip()
     }
     if not values:
         return _fail("No se enviaron valores para guardar")
     set_env_values(values)
-    return _ok(values)
+    # No devolvemos el valor del token para evitar reflejarlo al cliente.
+    safe = {
+        key: (_mask_token(value) if key in {"X_INTEGRATION_TOKEN", "FRESH_KDS_API_KEY"} else value)
+        for key, value in values.items()
+    }
+    return _ok(safe)
 
 
 # ---------------------------------------------------------------------------
@@ -191,6 +211,26 @@ def api_orders():
 # ---------------------------------------------------------------------------
 # Acciones cloud
 # ---------------------------------------------------------------------------
+def _extract_api_error(response: Any) -> tuple[int, Any] | None:
+    """Si la respuesta del wrapper trae un error HTTP del API real, lo devuelve.
+
+    `_request()` en pyKDSAPI devuelve `{"status_code": X, "error": ...}` cuando
+    el API responde con 4xx/5xx. Para no envolver eso como ok:true detectamos
+    ese patron y lo propagamos como error explicito.
+    """
+    if isinstance(response, dict) and "status_code" in response and "error" in response:
+        status = response["status_code"]
+        if isinstance(status, int) and status >= 400:
+            return status, response["error"]
+    if isinstance(response, list):
+        # algunas acciones (ej. 2 ordenes mismo nombre) responden con lista
+        for item in response:
+            error = _extract_api_error(item)
+            if error:
+                return error
+    return None
+
+
 @app.post("/api/send-order")
 def api_send_order():
     body = _body()
@@ -201,13 +241,29 @@ def api_send_order():
     device = _resolve("device", get_device_id)
     label, runner = ORDER_OPTIONS[template]
     result = runner(_token(), location, device)
+    response = result.get("response")
+    api_error = _extract_api_error(response)
+    if api_error:
+        status, detail = api_error
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": detail,
+                    "status_code": status,
+                    "label": label,
+                    "orderId": result.get("order_id"),
+                }
+            ),
+            502,
+        )
     return _ok(
         {
             "label": label,
             "orderId": result.get("order_id"),
             "customer": result.get("customer"),
             "items": result.get("items"),
-            "response": result.get("response"),
+            "response": response,
         }
     )
 

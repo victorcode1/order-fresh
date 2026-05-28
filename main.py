@@ -287,9 +287,21 @@ def _run_local_option(selected: str) -> int:
     return 0
 
 
+def _ensure_token() -> str:
+    """Devuelve el token integración. Si no existe, lo pide y lo guarda en .env."""
+    try:
+        return get_integration_token()
+    except RuntimeError:
+        print("No se encontro X_INTEGRATION_TOKEN ni FRESH_KDS_API_KEY en .env")
+        token = _prompt_text("Pega tu API Key de Fresh KDS")
+        set_env_values({"X_INTEGRATION_TOKEN": token})
+        print("Token guardado en .env como X_INTEGRATION_TOKEN")
+        return token
+
+
 def main() -> int:
     try:
-        token = get_integration_token()
+        token = _ensure_token()
         selected_store, selected_device = _resolve_location_and_device(token)
         location_id = selected_store["id"]
         device_id = selected_device["id"]
